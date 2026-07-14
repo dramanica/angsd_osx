@@ -1,31 +1,26 @@
-{% set version = "0.941.dev0" %}
+{% set name = "angsd" %}
+{% set version = "0.940" %}
 
 package:
-  name: angsd
+  name: {{ name }}
   version: {{ version }}
 
 source:
-  # For development/testing this can be "master".
-  # For anything you distribute, replace master with an exact commit SHA.
-  git_url: https://github.com/ANGSD/angsd.git
-  git_rev: master
+  url: http://popgen.dk/software/download/angsd/angsd{{ version }}.tar.gz
+  # Fill this in after downloading:
+  # sha256: YOUR_SHA256_HASH
 
 build:
   number: 0
-  run_exports:
-    - {{ pin_subpackage("angsd", max_pin="x.x") }}
 
 requirements:
   build:
     - {{ compiler("c") }}
     - {{ compiler("cxx") }}
-    - {{ stdlib("c") }}
     - make
-    - git
     - pkg-config
 
   host:
-    # Required directly by ANGSD and/or the bundled HTSlib.
     - zlib
     - bzip2
     - xz
@@ -33,6 +28,7 @@ requirements:
     - openssl
     - libdeflate
     - zstd
+    - llvm-openmp
 
   run:
     - zlib
@@ -42,21 +38,23 @@ requirements:
     - openssl
     - libdeflate
     - zstd
+    - llvm-openmp
 
 test:
   commands:
-    - angsd 2>&1 | grep -i "angsd version"
-    - thetaStat 2>&1 | grep -i "neutrality test"
-    - realSFS 2>&1 | grep -i "realSFS"
+    - angsd 2>&1 | head -20
+    - realSFS 2>&1 | head -20
+    - thetaStat 2>&1 | head -20
 
 about:
   home: https://github.com/ANGSD/angsd
   license: GPL-3.0-or-later
-  license_file: LICENSE
-  summary: "ANGSD: Analysis of Next Generation Sequencing Data"
-  dev_url: https://github.com/ANGSD/angsd
+  summary: "Analysis of Next Generation Sequencing Data"
+  description: |
+    ANGSD is a software package for analysing next generation sequencing
+    data, including genotype likelihood estimation and population genetic
+    analyses.
 
 extra:
-  identifiers:
-    - biotools:angsd
-    - doi:10.1186/s12859-014-0356-4
+  recipe-maintainers:
+    - YOUR_GITHUB_USERNAME

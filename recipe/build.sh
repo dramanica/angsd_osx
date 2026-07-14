@@ -1,18 +1,36 @@
 #!/usr/bin/env bash
+
 set -euxo pipefail
 
-# conda-build checks out git_url sources but does not guarantee that
-# submodules are populated. ANGSD's default Makefile target also runs this,
-# but doing it explicitly makes the build state clear.
-git submodule update --init --recursive
 
-# Build ANGSD using the bundled HTSlib submodule.
-#
-# Do NOT set HTSSRC=systemwide:
-# leaving HTSSRC undefined selects ANGSD's submodule build path.
-#
-# Pass the Conda toolchain explicitly. HTSlib inherits CC through make.
+# Locate extracted source
+cd "${SRC_DIR}"
+
+
+# Build bundled HTSlib
+cd htslib
+
 make \
+    CC="${CC}" \
+    CFLAGS="${CFLAGS}" \
+    LDFLAGS="${LDFLAGS}"
+
+cd ../angsd
+
+
+# Build ANGSD against bundled HTSlib
+#
+# This is the upstream-recommended mechanism:
+# make HTSSRC=../htslib
+
+export CPPFLAGS="${CPPFLAGS} -I${PREFIX}/include"
+export CFLAGS="${CFLAGS} -I${PREFIX}/include -Xpreprocessor -fopenmp"
+export CXXFLAGS="${CXXFLAGS} -I${PREFIX}/include -Xpreprocessor -fopenmp"
+export LDFLAGS="${LDFLAGS} -L${PREFIX}/lib -lomp"
+
+
+make \
+    HTSSRC=../htslib \
     CC="${CC}" \
     CXX="${CXX}" \
     CPPFLAGS="${CPPFLAGS}" \
@@ -20,9 +38,19 @@ make \
     CXXFLAGS="${CXXFLAGS}" \
     LDFLAGS="${LDFLAGS}"
 
-# ANGSD's install-all target installs angsd and the programs under misc/.
-make \
-    CC="${CC}" \
-    CXX="${CXX}" \
-    prefix="${PREFIX}" \
-    install-all
+
+mkdir -p "${PREFIX}/bin"
+
+install -m 755 angsd "${PREFIX}/bin/"
+
+
+# Install auxiliary programs
+
+for exe in \
+    misc/realSFS \
+    misc/thetaStat
+do
+    if [ -f "${exe}" ]; then
+        install -m 755 "${exe}" "${PREFIX}/bin/"
+    fi
+done

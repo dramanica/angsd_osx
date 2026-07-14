@@ -23,9 +23,9 @@ cd ../angsd
 # This is the upstream-recommended mechanism:
 # make HTSSRC=../htslib
 
-export CPPFLAGS="${CPPFLAGS} -I${PREFIX}/include"
-export CFLAGS="${CFLAGS} -I${PREFIX}/include -Xpreprocessor -fopenmp"
-export CXXFLAGS="${CXXFLAGS} -I${PREFIX}/include -Xpreprocessor -fopenmp"
+export CPPFLAGS="${CPPFLAGS} -I${PREFIX}/include -I${SRC_DIR}/htslib"
+export CFLAGS="${CFLAGS} -I${PREFIX}/include -I${SRC_DIR}/htslib -Xpreprocessor -fopenmp"
+export CXXFLAGS="${CXXFLAGS} -I${PREFIX}/include -I${SRC_DIR}/htslib -Xpreprocessor -fopenmp"
 export LDFLAGS="${LDFLAGS} -L${PREFIX}/lib -lomp"
 
 

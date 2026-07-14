@@ -47,7 +47,8 @@ jobs:
           "${HOME}/miniforge/bin/conda" install -y \
             -c conda-forge \
             conda-build \
-            conda-libmamba-solver
+            conda-libmamba-solver \
+            conda-client
 
       - name: Configure Conda
         shell: bash
@@ -98,10 +99,16 @@ jobs:
           conda run -n angsd-test \
             file "${CONDA_PREFIX}/envs/angsd-test/bin/angsd"
 
-      - name: Upload package
-        uses: actions/upload-artifact@v4
-        with:
-          name: angsd-${{ matrix.platform }}
-          path: |
-            ~/miniforge/conda-bld/**/*.conda
-            ~/miniforge/conda-bld/**/*.tar.bz2
+      - name: Upload to Anaconda.org
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+        run: |
+          PACKAGE=$(cat package-path.txt)
+
+          anaconda upload \
+            --user dramanica \
+            --label main \
+            --force \
+            "$PACKAGE"

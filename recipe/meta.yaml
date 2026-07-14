@@ -1,0 +1,62 @@
+{% set version = "0.941.dev0" %}
+
+package:
+  name: angsd
+  version: {{ version }}
+
+source:
+  # For development/testing this can be "master".
+  # For anything you distribute, replace master with an exact commit SHA.
+  git_url: https://github.com/ANGSD/angsd.git
+  git_rev: master
+
+build:
+  number: 0
+  run_exports:
+    - {{ pin_subpackage("angsd", max_pin="x.x") }}
+
+requirements:
+  build:
+    - {{ compiler("c") }}
+    - {{ compiler("cxx") }}
+    - {{ stdlib("c") }}
+    - make
+    - git
+    - pkg-config
+
+  host:
+    # Required directly by ANGSD and/or the bundled HTSlib.
+    - zlib
+    - bzip2
+    - xz
+    - libcurl
+    - openssl
+    - libdeflate
+    - zstd
+
+  run:
+    - zlib
+    - bzip2
+    - xz
+    - libcurl
+    - openssl
+    - libdeflate
+    - zstd
+
+test:
+  commands:
+    - angsd 2>&1 | grep -i "angsd version"
+    - thetaStat 2>&1 | grep -i "neutrality test"
+    - realSFS 2>&1 | grep -i "realSFS"
+
+about:
+  home: https://github.com/ANGSD/angsd
+  license: GPL-3.0-or-later
+  license_file: LICENSE
+  summary: "ANGSD: Analysis of Next Generation Sequencing Data"
+  dev_url: https://github.com/ANGSD/angsd
+
+extra:
+  identifiers:
+    - biotools:angsd
+    - doi:10.1186/s12859-014-0356-4

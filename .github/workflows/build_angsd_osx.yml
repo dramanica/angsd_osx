@@ -1,0 +1,107 @@
+name: Build ANGSD conda package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            platform: osx-64
+
+          - runner: macos-15
+            platform: osx-arm64
+
+    name: Build ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout recipe repository
+        uses: actions/checkout@v6
+
+      - name: Show system information
+        run: |
+          uname -a
+          uname -m
+          sw_vers
+
+      - name: Install Miniforge
+        shell: bash
+        run: |
+          curl -L \
+            "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh" \
+            -o miniforge.sh
+
+          bash miniforge.sh -b -p "${HOME}/miniforge"
+
+          echo "${HOME}/miniforge/bin" >> "${GITHUB_PATH}"
+
+      - name: Install build tools
+        shell: bash
+        run: |
+          "${HOME}/miniforge/bin/conda" install -y \
+            -c conda-forge \
+            conda-build \
+            conda-libmamba-solver
+
+      - name: Configure Conda
+        shell: bash
+        run: |
+          conda config --set solver libmamba
+          conda config --add channels conda-forge
+          conda config --set channel_priority strict
+
+      - name: Render recipe
+        shell: bash
+        run: |
+          conda render recipe
+
+      - name: Build package
+        shell: bash
+        run: |
+          conda build recipe \
+            --override-channels \
+            -c conda-forge
+
+      - name: Find built package
+        shell: bash
+        run: |
+          conda build recipe --output > package-path.txt
+          cat package-path.txt
+
+      - name: Install and test built package
+        shell: bash
+        run: |
+          PACKAGE="$(cat package-path.txt)"
+
+          conda create -y \
+            -n angsd-test \
+            --override-channels \
+            -c local \
+            -c conda-forge \
+            angsd
+
+          conda run -n angsd-test angsd 2>&1 | head -50
+          conda run -n angsd-test realSFS 2>&1 | head -50
+          conda run -n angsd-test thetaStat 2>&1 | head -50
+
+          conda list -n angsd-test
+
+      - name: Inspect binary architecture
+        shell: bash
+        run: |
+          conda run -n angsd-test \
+            file "${CONDA_PREFIX}/envs/angsd-test/bin/angsd"
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: angsd-${{ matrix.platform }}
+          path: |
+            ~/miniforge/conda-bld/**/*.conda
+            ~/miniforge/conda-bld/**/*.tar.bz2

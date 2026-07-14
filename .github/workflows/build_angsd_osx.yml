@@ -48,7 +48,7 @@ jobs:
             -c conda-forge \
             conda-build \
             conda-libmamba-solver \
-            conda-client
+            anaconda-client
 
       - name: Configure Conda
         shell: bash

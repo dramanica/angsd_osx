@@ -48,7 +48,8 @@ install -m 755 angsd "${PREFIX}/bin/"
 
 for exe in \
     misc/realSFS \
-    misc/thetaStat
+    misc/thetaStat \
+    misc/NGSadmix
 do
     if [ -f "${exe}" ]; then
         install -m 755 "${exe}" "${PREFIX}/bin/"

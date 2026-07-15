@@ -45,6 +45,7 @@ test:
     - angsd 2>&1 | head -20
     - realSFS 2>&1 | head -20
     - thetaStat 2>&1 | head -20
+    - NGSadmix 2>&1 | head -20
 
 about:
   home: https://github.com/ANGSD/angsd
